@@ -100,11 +100,34 @@ Through feature importance analysis on tree ensembles, the model isolates the **
 | **9** | `AMT_INCOME_TOTAL` | Total annual income of applicant | Direct debt-service capacity |
 | **10** | `DAYS_EMPLOYED` | Days employed prior to loan application | Job security and income continuity |
 
-### Domain-Specific Ratios Engineered:
-* **Credit-to-Income Ratio:** $\text{AMT\_CREDIT} / \text{AMT\_INCOME\_TOTAL}$
-* **Annuity-to-Income Ratio:** $\text{AMT\_ANNUITY} / \text{AMT\_INCOME\_TOTAL}$
-* **Credit Term Duration:** $\text{AMT\_ANNUITY} / \text{AMT\_CREDIT}$
-* **Employment-to-Age Ratio:** $\text{DAYS\_EMPLOYED} / \text{DAYS\_BIRTH}$
+### 🧮 Domain-Specific Features & Ratios Engineered
+
+To capture non-linear relationships and direct debt-servicing ability, several domain-specific financial indicators and interaction features were engineered:
+
+#### 1. Financial Capacity & Debt Burden Ratios
+| Engineered Feature | Formula | Business & Risk Interpretation |
+| :--- | :--- | :--- |
+| `CREDIT_INCOME_PERCENT` | `AMT_CREDIT / AMT_INCOME_TOTAL` | Measures total credit exposure as a multiple of annual income (leverage indicator). |
+| `ANNUITY_INCOME_PERCENT` | `AMT_ANNUITY / AMT_INCOME_TOTAL` | Measures monthly payment burden against earnings (debt-to-income liquidity strain). |
+| `CREDIT_TERM` | `AMT_ANNUITY / AMT_CREDIT` | Effective repayment rate representing expected payback duration and interest load. |
+| `GOODS_CREDIT_PERCENT` | `AMT_GOODS_PRICE / AMT_CREDIT` | Down-payment proxy indicating how much of the loan directly funds the purchase. |
+
+#### 2. Employment Stability & Demographic Indicators
+| Engineered Feature | Formula | Business & Risk Interpretation |
+| :--- | :--- | :--- |
+| `DAYS_EMPLOYED_PERCENT` | `DAYS_EMPLOYED / DAYS_BIRTH` | Percentage of an applicant's lifetime spent in continuous employment. |
+| `AGE_YEARS` | `-1 * (DAYS_BIRTH / 365.25)` | Applicant's age converted from negative days to chronological years. |
+| `EMPLOYED_YEARS` | `-1 * (DAYS_EMPLOYED / 365.25)` | Career longevity with the current employer. |
+| `PHONE_CHANGE_YEARS` | `-1 * (DAYS_LAST_PHONE_CHANGE / 365.25)` | Years since contact info update (indicator of residency and stability). |
+
+#### 3. Polynomial Interaction Terms (Degree 2 & 3)
+Tree models and linear classifiers benefit significantly from multiplicative interactions between external bureau scores and client age:
+| Interaction Feature | Formula | Impact on Target Correlation |
+| :--- | :--- | :--- |
+| `EXT_2_x_EXT_3` | `EXT_SOURCE_2 * EXT_SOURCE_3` | Strongest single negative correlation (-0.194) with default risk. |
+| `EXT_1_x_EXT_2_x_EXT_3` | `EXT_SOURCE_1 * EXT_SOURCE_2 * EXT_SOURCE_3` | Triple external bureau consensus rating (-0.190 correlation). |
+| `EXT_2_x_EXT_3_x_AGE` | `EXT_SOURCE_2 * EXT_SOURCE_3 * DAYS_BIRTH` | Cross-validates external scores against applicant maturity (-0.181 correlation). |
+| `EXT_2_POW2_x_EXT_3` | `(EXT_SOURCE_2 ^ 2) * EXT_SOURCE_3` | Amplifies non-linear credit score confidence (-0.176 correlation). |
 
 ---
 
